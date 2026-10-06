@@ -1,4 +1,4 @@
-const { app, BrowserWindow, globalShortcut, ipcMain, screen } = require("electron");
+const { app, BrowserWindow, globalShortcut, ipcMain, screen, Tray, Menu } = require("electron");
 const fs = require("fs");
 const path = require("path");
 
@@ -14,7 +14,12 @@ const loadConfig = () => {
 };
 const saveConfig = (cfg) => fs.writeFileSync(configPath, JSON.stringify(cfg, null, 2));
 
-let overlay, setup;
+let overlay, setup, tray;
+
+const toggleOverlay = () => {
+  if (!overlay) return;
+  overlay.isVisible() ? overlay.hide() : overlay.showInactive();
+};
 
 const overlayUrl = ({ profileId, theme = "floating" }) =>
   `${BASE_URL}/profile/${profileId}/bar?theme=${theme}&includeAlts=true`;
@@ -63,10 +68,17 @@ app.whenReady().then(() => {
   const cfg = loadConfig();
   cfg.profileId ? openOverlay(cfg) : openSetup();
 
-  globalShortcut.register("CommandOrControl+Shift+O", () => {
-    if (!overlay) return;
-    overlay.isVisible() ? overlay.hide() : overlay.showInactive();
-  });
+  tray = new Tray(path.join(__dirname, "icon.png"));
+  tray.setToolTip("AoE4 Overlay");
+  tray.setContextMenu(
+    Menu.buildFromTemplate([
+      { label: "Show/Hide overlay (Ctrl+Shift+O)", click: toggleOverlay },
+      { label: "Settings (Ctrl+Shift+P)", click: openSetup },
+      { label: "Quit (Ctrl+Shift+Q)", click: () => app.quit() },
+    ])
+  );
+
+  globalShortcut.register("CommandOrControl+Shift+O", toggleOverlay);
   globalShortcut.register("CommandOrControl+Shift+P", openSetup);
   globalShortcut.register("CommandOrControl+Shift+Q", () => app.quit());
 });
