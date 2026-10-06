@@ -3,46 +3,80 @@
   <head>
     <meta charset="utf-8" />
     <style>
-      #stats label { display: inline-block; width: 48%; margin: 2px 0; }
-      #stats input { width: auto; margin: 0 6px 0 0; }
-      body { font-family: system-ui, sans-serif; background: #15181d; color: #eee; padding: 20px; }
-      input, select, button { width: 100%; padding: 8px; margin: 6px 0 14px; box-sizing: border-box; }
+      body { font-family: system-ui, sans-serif; background: #15181d; color: #eee; margin: 0; display: flex; height: 100vh; }
+      #form { width: 340px; padding: 20px; overflow-y: auto; box-sizing: border-box; }
+      #side { flex: 1; padding: 20px 20px 20px 0; display: flex; flex-direction: column; min-width: 0; }
+      input[type=text], select, button { width: 100%; padding: 8px; margin: 6px 0 14px; box-sizing: border-box; }
+      input[type=range] { width: 100%; }
       button { background: #3b82f6; color: #fff; border: 0; border-radius: 4px; cursor: pointer; }
       small { color: #999; }
+      #stats label { display: inline-block; width: 48%; margin: 2px 0; }
+      #preview { flex: 1; background: #2a3a2a; border-radius: 6px; overflow: hidden; position: relative; }
+      #preview iframe { border: 0; width: 840px; height: 400px; transform-origin: top left; position: absolute; top: 0; left: 0; pointer-events: none; }
     </style>
   </head>
   <body>
-    <label>AoE4 World profile ID</label>
-    <input id="id" placeholder="e.g. 7090781" />
-    <small>The number in your aoe4world.com/players/<b>7090781</b>-name URL</small>
-    <br /><br />
-    <label>Theme</label>
-    <select id="theme">
-      <option value="floating">Floating</option>
-      <option value="top">Top</option>
-    </select>
-    <label>Show for each player</label>
-    <div id="stats"></div>
-    <br />
-    <button id="save">Start overlay</button>
-    <small>Ctrl+Shift+O hide/show · Ctrl+Shift+P settings · Ctrl+Shift+Q quit</small>
+    <div id="form">
+      <label>AoE4 World profile ID</label>
+      <input type="text" id="id" placeholder="e.g. 7090781" />
+      <small>The number in your aoe4world.com/players/<b>7090781</b>-name URL</small>
+      <br /><br />
+      <label>Theme</label>
+      <select id="theme">
+        <option value="floating">Floating</option>
+        <option value="top">Top</option>
+      </select>
+      <label>Size: <span id="scaleVal"></span></label>
+      <input type="range" id="scale" min="0.6" max="1.6" step="0.05" value="1" />
+      <label>Show for each player</label>
+      <div id="stats"></div>
+      <br />
+      <label><input type="checkbox" id="autostart" /> Start with Windows</label>
+      <br /><br />
+      <button id="save">Save and start overlay</button>
+      <small>Ctrl+Shift+O hide/show · Ctrl+Shift+P settings · Ctrl+Shift+Q quit</small>
+    </div>
+    <div id="side">
+      <label>Preview (sample game)</label>
+      <br />
+      <div id="preview"><iframe id="frame"></iframe></div>
+      <small>The overlay is shown at the top-center of your screen in-game.</small>
+    </div>
     <script>
       const $ = (s) => document.getElementById(s);
       const STATS = { country: "Country", rank: "Rank", rating: "Rating", winrate: "Win rate %", wins: "Wins", losses: "Losses", games: "Games played", maxrating: "Max rating", streak: "Win/loss streak" };
       const DEFAULT = ["rank", "rating", "wins", "losses", "winrate"];
+      let base;
       $("stats").innerHTML = Object.entries(STATS).map(([k, l]) => `<label><input type="checkbox" value="${k}" />${l}</label>`).join("");
       const setChecked = (list) => document.querySelectorAll("#stats input").forEach((i) => (i.checked = list.includes(i.value)));
+      const getShow = () => [...document.querySelectorAll("#stats input:checked")].map((i) => i.value);
       setChecked(DEFAULT);
+
+      const updatePreview = () => {
+        $("scaleVal").textContent = Math.round($("scale").value * 100) + "%";
+        if (!base) return;
+        const q = new URLSearchParams({ theme: $("theme").value, show: getShow().join(","), scale: $("scale").value, preview: "1" });
+        $("frame").src = `${base}/profile/1/bar?${q}`;
+        $("frame").style.transform = `scale(${$("preview").clientWidth / 840})`;
+      };
+      document.querySelectorAll("#form input, #form select").forEach((e) => e.addEventListener("input", updatePreview));
+      window.addEventListener("resize", updatePreview);
+
       overlayApi.getConfig().then((c) => {
+        base = c.base;
         if (c.profileId) $("id").value = c.profileId;
         if (c.theme) $("theme").value = c.theme;
         if (c.show) setChecked(c.show);
+        if (c.scale) $("scale").value = c.scale;
+        $("autostart").checked = !!c.autostart;
+        if (!base) $("preview").textContent = "Preview needs the web build: run `npm run build` in the repo root.";
+        updatePreview();
       });
+
       $("save").onclick = () => {
         const profileId = $("id").value.trim();
         if (!/^\d+$/.test(profileId)) return alert("Profile ID must be a number");
-        const show = [...document.querySelectorAll("#stats input:checked")].map((i) => i.value);
-        overlayApi.save({ profileId, theme: $("theme").value, show });
+        overlayApi.save({ profileId, theme: $("theme").value, show: getShow(), scale: parseFloat($("scale").value), autostart: $("autostart").checked });
       };
     </script>
   </body>

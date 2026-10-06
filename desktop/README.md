@@ -21,3 +21,9 @@ First launch asks for your AoE4 World profile ID. Shortcuts:
 
 ## Settings
 Pick which stats to show per player (country, rank, rating, win rate, wins/losses, games, max rating, streak) in the settings window (`Ctrl+Shift+P`). The web overlay also accepts them as `?show=country,rank,rating,winrate`.
+
+## Preview, size and autostart
+The settings window shows a live preview with a sample game, a size slider (60%–160%) and a "Start with Windows" option.
+
+## Get the .exe without building locally
+GitHub > Actions > "Build desktop .exe" > latest run > download the `AoE4-Overlay-exe` artifact (portable, just double-click).

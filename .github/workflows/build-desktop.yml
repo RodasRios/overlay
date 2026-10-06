@@ -1,0 +1,24 @@
+name: Build desktop .exe
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/fervent-hypatia-p7xmg2]
+    paths: [desktop/**, src/**, package.json]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+        working-directory: desktop
+      - run: npm run build
+        working-directory: desktop
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AoE4-Overlay-exe
+          path: desktop/dist/*.exe

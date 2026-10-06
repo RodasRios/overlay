@@ -13,7 +13,7 @@ import {
   Switch,
 } from "solid-js";
 import { useParams, useSearchParams } from "@solidjs/router";
-import { Civilization, CurrentGame, getLastGame, Player as TeamPlayer, RANDOM_CIVILIZATION } from "./query";
+import { Civilization, CurrentGame, getLastGame, SAMPLE_GAME, Player as TeamPlayer, RANDOM_CIVILIZATION } from "./query";
 import { STYLESET_TYPES, STYLESETS } from "../assets";
 import { classes } from "../utils";
 
@@ -147,10 +147,11 @@ const Overlay: Component = () => {
   const show: StatKey[] | undefined = options.show
     ? (options.show.split(",").map((x) => x.trim()) as StatKey[]).filter((x) => STAT_KEYS.includes(x))
     : undefined;
+  const scale = Math.min(2, Math.max(0.5, parseFloat(options.scale ?? "1") || 1));
   const hideAfter: number = parseInt(options.hideAfter ?? CONFIG.HIDE_GAME_AFTER.toString());
   const [currentGame, { refetch }] = createResource(
     (_, { value, refetching }: { value: CurrentGame; refetching: boolean }) =>
-      getLastGame(
+      options.preview ? Promise.resolve(SAMPLE_GAME) : getLastGame(
         profileId,
         { api_key: options.apiKey, include_alts: options.includeAlts, include_custom: options.includeCustom },
         { value, refetching }
@@ -202,7 +203,10 @@ const Overlay: Component = () => {
   );
 
   return (
-    <div class="flex items-center flex-col" style="text-shadow: 0px 1px 0 1px black;">
+    <div
+      class="flex items-center flex-col"
+      style={`text-shadow: 0px 1px 0 1px black; transform: scale(${scale}); transform-origin: top center;`}
+    >
       <Switch>
         <Match when={!profileId}>
           <div class="bg-red-900 p-6 text-sm m-4 rounded-md max-w-[800px]">

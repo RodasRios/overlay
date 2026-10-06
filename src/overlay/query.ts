@@ -208,6 +208,34 @@ export type CurrentGame = {
   error?: Error;
 };
 
+const samplePlayer = (id: number, name: string, civ: string, country: string, rank: string, stats: Partial<ApiMode>): Player => ({
+  id,
+  name,
+  country,
+  civilization: CIVILIZATIONS[civ],
+  civilization_randomized: false,
+  rank,
+  mode_stats: {
+    rating: 1650, max_rating: 1720, rank: 420, streak: 3, games_count: 180, wins_count: 98, losses_count: 82, win_rate: 54.4,
+    ...stats,
+  } as ApiMode,
+});
+
+// Fake game used by the `preview` url option so the layout can be tweaked without being in a match
+export const SAMPLE_GAME: CurrentGame = {
+  id: 0,
+  started_at: new Date(),
+  duration: 0,
+  map: "Dry Arabia",
+  kind: "rm 1v1",
+  ongoing: true,
+  recentlyFinished: false,
+  team: [samplePlayer(1, "You", "english", "es", "solo_conqueror_2", {})],
+  opponents: [samplePlayer(2, "Rival", "mongols", "kr", "solo_diamond_1", { rating: 1480, max_rating: 1530, rank: 2210, streak: -2, games_count: 95, wins_count: 47, losses_count: 48, win_rate: 49.5 })],
+  teams: [],
+};
+SAMPLE_GAME.teams = [SAMPLE_GAME.team, SAMPLE_GAME.opponents];
+
 export type FetchError = {
   error: Error;
 };

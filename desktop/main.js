@@ -40,17 +40,20 @@ function startServer() {
   return new Promise((resolve) => server.listen(0, "127.0.0.1", () => resolve(`http://127.0.0.1:${server.address().port}`)));
 }
 
-const overlayUrl = ({ profileId, theme = "floating", show = DEFAULT_SHOW }) => {
+const overlayUrl = ({ profileId, theme = "floating", show = DEFAULT_SHOW, scale = 1 }) => {
   const q = new URLSearchParams({ theme, includeAlts: "true" });
-  if (localBase) q.set("show", show.join(","));
+  if (localBase) {
+    q.set("show", show.join(","));
+    q.set("scale", scale);
+  }
   return `${localBase || BASE_URL}/profile/${profileId}/bar?${q}`;
 };
 
 function openSetup() {
   if (setup) return setup.focus();
   setup = new BrowserWindow({
-    width: 420,
-    height: 430,
+    width: 1040,
+    height: 640,
     resizable: false,
     autoHideMenuBar: true,
     title: "AoE4 Overlay",
@@ -108,10 +111,11 @@ app.whenReady().then(async () => {
 
 ipcMain.on("save-config", (_e, cfg) => {
   saveConfig(cfg);
+  app.setLoginItemSettings({ openAtLogin: !!cfg.autostart });
   if (setup) setup.close();
   openOverlay(cfg);
 });
-ipcMain.handle("get-config", () => loadConfig());
+ipcMain.handle("get-config", () => ({ ...loadConfig(), base: localBase }));
 
 app.on("window-all-closed", () => {});
 app.on("will-quit", () => globalShortcut.unregisterAll());
