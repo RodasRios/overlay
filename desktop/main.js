@@ -57,6 +57,7 @@ function openSetup() {
     resizable: false,
     autoHideMenuBar: true,
     title: "AoE4 Overlay",
+    icon: path.join(__dirname, "icon.png"),
     webPreferences: { preload: path.join(__dirname, "preload.js") },
   });
   setup.loadFile("setup.html");
