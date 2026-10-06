@@ -16,8 +16,22 @@
   "build": {
     "appId": "com.aoe4world.overlay.desktop",
     "productName": "AoE4 Overlay",
-    "files": ["main.js", "preload.js", "setup.html", "icon.png"],
-    "win": { "target": "portable" },
-    "extraResources": [{ "from": "../dist", "to": "web" }]
-  }
+    "files": [
+      "main.js",
+      "preload.js",
+      "setup.html",
+      "icon.png"
+    ],
+    "win": {
+      "target": "portable",
+      "icon": "icon.png"
+    },
+    "extraResources": [
+      {
+        "from": "../dist",
+        "to": "web"
+      }
+    ]
+  },
+  "author": "AoE4 Overlay"
 }
