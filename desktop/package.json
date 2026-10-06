@@ -6,7 +6,8 @@
   "license": "MIT",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder --win portable"
+    "build:web": "cd .. && npm install && npm run build",
+    "build": "npm run build:web && electron-builder --win portable"
   },
   "devDependencies": {
     "electron": "^28.0.0",
@@ -16,6 +17,7 @@
     "appId": "com.aoe4world.overlay.desktop",
     "productName": "AoE4 Overlay",
     "files": ["main.js", "preload.js", "setup.html", "icon.png"],
-    "win": { "target": "portable" }
+    "win": { "target": "portable" },
+    "extraResources": [{ "from": "../dist", "to": "web" }]
   }
 }

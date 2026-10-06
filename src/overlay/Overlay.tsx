@@ -40,6 +40,12 @@ const Badge: Component<{ rank: string; class?: string, styleset: STYLESET_TYPES 
   <img src={STYLESETS[props.styleset].badges[props.rank]} class={props.class} />
 );
 
+// Stats that can be toggled with the `show` url option, e.g. `show=country,rank,rating,winrate`
+export const STAT_KEYS = ["country", "rank", "rating", "wins", "losses", "winrate", "streak", "maxrating", "games"] as const;
+export type StatKey = typeof STAT_KEYS[number];
+const DEFAULT_SHOW: StatKey[] = ["rank", "rating", "wins", "losses", "winrate"];
+const DEFAULT_SHOW_COMPACT: StatKey[] = ["rank", "rating"];
+
 const Player: Component<{
   civ: Civilization;
   player: TeamPlayer;
@@ -47,8 +53,10 @@ const Player: Component<{
   align: "left" | "right";
   size?: "compact";
   styleset: STYLESET_TYPES;
+  show?: StatKey[];
 }> = (props) => {
   const compact = () => props.size === "compact";
+  const shown = (key: StatKey) => (props.show ?? (compact() ? DEFAULT_SHOW_COMPACT : DEFAULT_SHOW)).includes(key);
   const rightAligned = () => props.align === "right";
   return (
     <div class={classes("flex items-center gap-3", rightAligned() && "flex-row-reverse")}>
@@ -94,14 +102,26 @@ const Player: Component<{
         >
           {props.player.mode_stats ? (
             <>
-              <span>#{props.player.mode_stats.rank}</span>
-              <span>{props.player.mode_stats.rating}</span>
-              {!compact() && (
-                <>
-                  <span class="text-green-500">{props.player.mode_stats.wins_count}W</span>
-                  <span class="text-red-500">{props.player.mode_stats.losses_count}L</span>
-                  <span>{props.player.mode_stats.win_rate}%</span>
-                </>
+              {shown("country") && props.player.country && (
+                <img
+                  src={`https://flagcdn.com/24x18/${props.player.country.toLowerCase()}.png`}
+                  alt={props.player.country}
+                  title={props.player.country.toUpperCase()}
+                  class="h-4 self-center rounded-[2px]"
+                />
+              )}
+              {shown("rank") && <span>#{props.player.mode_stats.rank}</span>}
+              {shown("rating") && <span>{props.player.mode_stats.rating}</span>}
+              {shown("maxrating") && <span class="text-white/70">max {props.player.mode_stats.max_rating}</span>}
+              {shown("wins") && <span class="text-green-500">{props.player.mode_stats.wins_count}W</span>}
+              {shown("losses") && <span class="text-red-500">{props.player.mode_stats.losses_count}L</span>}
+              {shown("games") && <span class="text-white/70">{props.player.mode_stats.games_count} games</span>}
+              {shown("winrate") && <span>{props.player.mode_stats.win_rate}%</span>}
+              {shown("streak") && props.player.mode_stats.streak != 0 && (
+                <span class={props.player.mode_stats.streak > 0 ? "text-green-500" : "text-red-500"}>
+                  {props.player.mode_stats.streak > 0 ? "+" : ""}
+                  {props.player.mode_stats.streak}
+                </span>
               )}
             </>
           ) : props.player.rank?.endsWith("unranked") ? (
@@ -124,6 +144,9 @@ const Overlay: Component = () => {
   const profileId = params.profileId?.split("-")[0];
   const theme: "top" | "floating" = (options.theme as any) ?? "floating";
   const styleset: STYLESET_TYPES = (options.styleset as any) ?? "s3";
+  const show: StatKey[] | undefined = options.show
+    ? (options.show.split(",").map((x) => x.trim()) as StatKey[]).filter((x) => STAT_KEYS.includes(x))
+    : undefined;
   const hideAfter: number = parseInt(options.hideAfter ?? CONFIG.HIDE_GAME_AFTER.toString());
   const [currentGame, { refetch }] = createResource(
     (_, { value, refetching }: { value: CurrentGame; refetching: boolean }) =>
@@ -220,6 +243,7 @@ const Overlay: Component = () => {
                     align="left"
                     size={isTeamGame() ? "compact" : null}
                     styleset={styleset}
+                    show={show}
                   />
                 )}
               </For>
@@ -246,6 +270,7 @@ const Overlay: Component = () => {
                     align="right"
                     size={isTeamGame() ? "compact" : null}
                     styleset={styleset}
+                    show={show}
                   />
                 )}
               </For>

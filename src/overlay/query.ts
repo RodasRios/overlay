@@ -171,6 +171,7 @@ const mapPlayer =
       name: player.name,
       civilization: CIVILIZATIONS[player.civilization] ?? UNKNOWN_CIVILIZATION,
       civilization_randomized: player.civilization_randomized,
+      country: player.country,
       mode_stats: mode?.games_count ? mode : null,
       rank: leaderboard.startsWith("rm_solo")
         ? `solo_${rank_level}`
@@ -185,6 +186,7 @@ export type Player = {
   name: string;
   civilization: Civilization;
   civilization_randomized: boolean;
+  country?: string;
   mode_stats?: ApiMode;
   rank?: string;
   id: number;
@@ -285,6 +287,7 @@ interface ApiGame {
 interface ApiPlayer {
   civilization: string;
   civilization_randomized: boolean;
+  country?: string;
   result?: any;
   name: string;
   profile_id: number;

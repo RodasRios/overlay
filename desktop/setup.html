@@ -3,6 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <style>
+      #stats label { display: inline-block; width: 48%; margin: 2px 0; }
+      #stats input { width: auto; margin: 0 6px 0 0; }
       body { font-family: system-ui, sans-serif; background: #15181d; color: #eee; padding: 20px; }
       input, select, button { width: 100%; padding: 8px; margin: 6px 0 14px; box-sizing: border-box; }
       button { background: #3b82f6; color: #fff; border: 0; border-radius: 4px; cursor: pointer; }
@@ -19,18 +21,28 @@
       <option value="floating">Floating</option>
       <option value="top">Top</option>
     </select>
+    <label>Show for each player</label>
+    <div id="stats"></div>
+    <br />
     <button id="save">Start overlay</button>
     <small>Ctrl+Shift+O hide/show · Ctrl+Shift+P settings · Ctrl+Shift+Q quit</small>
     <script>
       const $ = (s) => document.getElementById(s);
+      const STATS = { country: "Country", rank: "Rank", rating: "Rating", winrate: "Win rate %", wins: "Wins", losses: "Losses", games: "Games played", maxrating: "Max rating", streak: "Win/loss streak" };
+      const DEFAULT = ["rank", "rating", "wins", "losses", "winrate"];
+      $("stats").innerHTML = Object.entries(STATS).map(([k, l]) => `<label><input type="checkbox" value="${k}" />${l}</label>`).join("");
+      const setChecked = (list) => document.querySelectorAll("#stats input").forEach((i) => (i.checked = list.includes(i.value)));
+      setChecked(DEFAULT);
       overlayApi.getConfig().then((c) => {
         if (c.profileId) $("id").value = c.profileId;
         if (c.theme) $("theme").value = c.theme;
+        if (c.show) setChecked(c.show);
       });
       $("save").onclick = () => {
         const profileId = $("id").value.trim();
         if (!/^\d+$/.test(profileId)) return alert("Profile ID must be a number");
-        overlayApi.save({ profileId, theme: $("theme").value });
+        const show = [...document.querySelectorAll("#stats input:checked")].map((i) => i.value);
+        overlayApi.save({ profileId, theme: $("theme").value, show });
       };
     </script>
   </body>

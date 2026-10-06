@@ -1,5 +1,6 @@
 const { app, BrowserWindow, globalShortcut, ipcMain, screen, Tray, Menu } = require("electron");
 const fs = require("fs");
+const http = require("http");
 const path = require("path");
 
 const BASE_URL = "https://overlay.aoe4world.com";
@@ -21,14 +22,35 @@ const toggleOverlay = () => {
   overlay.isVisible() ? overlay.hide() : overlay.showInactive();
 };
 
-const overlayUrl = ({ profileId, theme = "floating" }) =>
-  `${BASE_URL}/profile/${profileId}/bar?theme=${theme}&includeAlts=true`;
+const DEFAULT_SHOW = ["rank", "rating", "wins", "losses", "winrate"];
+
+// The overlay web app is served locally from the build output (so new options work without hosting it).
+const webDir = app.isPackaged ? path.join(process.resourcesPath, "web") : path.join(__dirname, "..", "dist");
+const MIME = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".png": "image/png", ".json": "application/json", ".webmanifest": "application/manifest+json" };
+let localBase;
+
+function startServer() {
+  if (!fs.existsSync(path.join(webDir, "index.html"))) return Promise.resolve(null);
+  const server = http.createServer((req, res) => {
+    const file = path.join(webDir, path.normalize(decodeURIComponent(req.url.split("?")[0])));
+    const target = file.startsWith(webDir) && fs.existsSync(file) && fs.statSync(file).isFile() ? file : path.join(webDir, "index.html");
+    res.writeHead(200, { "Content-Type": MIME[path.extname(target)] || "application/octet-stream" });
+    fs.createReadStream(target).pipe(res);
+  });
+  return new Promise((resolve) => server.listen(0, "127.0.0.1", () => resolve(`http://127.0.0.1:${server.address().port}`)));
+}
+
+const overlayUrl = ({ profileId, theme = "floating", show = DEFAULT_SHOW }) => {
+  const q = new URLSearchParams({ theme, includeAlts: "true" });
+  if (localBase) q.set("show", show.join(","));
+  return `${localBase || BASE_URL}/profile/${profileId}/bar?${q}`;
+};
 
 function openSetup() {
   if (setup) return setup.focus();
   setup = new BrowserWindow({
     width: 420,
-    height: 300,
+    height: 430,
     resizable: false,
     autoHideMenuBar: true,
     title: "AoE4 Overlay",
@@ -64,7 +86,8 @@ function openOverlay(cfg) {
   overlay.on("closed", () => (overlay = null));
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  localBase = await startServer();
   const cfg = loadConfig();
   cfg.profileId ? openOverlay(cfg) : openSetup();
 
