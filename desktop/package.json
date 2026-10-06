@@ -1,0 +1,21 @@
+{
+  "name": "aoe4world-overlay-desktop",
+  "version": "0.1.0",
+  "description": "In-game desktop overlay for AoE4 World Overlay (no OBS needed)",
+  "main": "main.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win portable"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.aoe4world.overlay.desktop",
+    "productName": "AoE4 Overlay",
+    "files": ["main.js", "preload.js", "setup.html"],
+    "win": { "target": "portable" }
+  }
+}
