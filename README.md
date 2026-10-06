@@ -1,3 +1,20 @@
+# AoE4 World Overlay — Desktop (.exe) fork
+
+> **About this fork**
+> This is a personal fork of the excellent [AoE4 World Overlay](https://github.com/aoe4world/overlay) by the [AoE4 World](https://aoe4world.com) team. All the credit for the overlay itself goes to them.
+>
+> I made a few changes, with the help of [Claude Code](https://claude.com/claude-code), for one reason: I wanted to use the overlay **directly in-game as a standalone `.exe`, without OBS**, and I wanted that tool for myself. I'm sharing it in case it's useful to someone else, but it was built for personal use, so expect rough edges and plenty of things to improve.
+>
+> **What was added**
+> - `desktop/`: an Electron app (transparent, click-through, always-on-top window) that shows the overlay over the game, with a tray icon, global shortcuts, a settings window with live preview, size slider and "start with Windows". See [desktop/README.md](desktop/README.md).
+> - Configurable stats per player in the web overlay via `?show=country,rank,rating,winrate,...` (country, rank, rating, win rate, wins, losses, games, max rating, streak).
+> - `?scale=` (size) and `?preview=1` (sample game) options for the web overlay.
+> - A GitHub Action that builds the portable `.exe`.
+>
+> Not affiliated with, or endorsed by, AoE4 World or Microsoft. Issues with this fork's desktop app are best reported here, not to the original project.
+
+---
+
 
 # AoE4 World Overlay
 
